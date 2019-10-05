@@ -1,58 +1,38 @@
 #include <iostream>
-#include <map>
 #include <vector>
-#include <queue>
 
 using std::cin;
 using std::cout;
 using std::endl;
-using std::map;
 using std::min;
-using std::pair;
-using std::priority_queue;
 using std::vector;
 
-using Grafo = vector<vector<pair<int, int>>>;
+using Grafo = vector<vector<int>>;
 
 #define INF 9999999
 
-vector<int> dijkstra(const Grafo& g, int desde) {
-	vector<int> dist(g.size(), INF);
-	priority_queue<pair<int, int>> pq;
-
-	dist[desde] = 0;
-
-	for (const auto& vert : g[desde]) {
-		dist[vert.first] = vert.second;
-		pq.push(vert);
-	}
-
-	while (not pq.empty()) {
-		auto vert = pq.top();
-		int dist_aca = dist[vert.first];
-		pq.pop();
-
-		for (const auto& v : g[vert.first]) 
-		if (dist_aca + v.second < dist[v.first]) {
-			dist[v.first] = dist_aca + v.second;
-			pq.emplace(v.first, dist[v.first]);
-		}
-	}
-
-	return dist;
+void fw(Grafo& g) {
+	int i, j, k, n = g.size();
+	for (k = 0; k < n; k++)
+	for (i = 0; i < n; i++)
+	for (j = 0; j < n; j++)
+	if (g[i][k] + g[k][j] < g[i][j])
+		g[i][j] = g[i][k] + g[k][j];
 }
 
 void resolver() {
 	int b, p, q;
 
 	cin >> b >> p;
-	Grafo g(p + 1);
+	Grafo g(p + 1, vector<int>(p + 1, INF));
+	vector<int> posibles;
 
 	cin >> q;
 	while (q--) {
 		int o;
 		cin >> o;
-		g[0].emplace_back(o, 0);
+		g[0][o] = 0;
+		posibles.push_back(o);
 	}
 
 	for (int i = 1; i <= p; i++) {
@@ -61,16 +41,23 @@ void resolver() {
 		while (q--) {
 			int c, o;
 			cin >> c >> o;
-			g[i].emplace_back(o, c);
+			g[i][o] = min(g[i][o], c);
 		}
 	}
 
 	int mindist = INF;
 
-	for (int i = 1; i <= p; i++)
-		mindist = min(dijkstra(g, i)[0], mindist);
+	fw(g);
+	for (int v : posibles)
+		mindist = min(g[v][0], mindist);
 
-	cout << b / (mindist - 1) << endl;
+	if (mindist >= b)
+		cout << 0 << endl;
+	else {
+		int res = (b - mindist) / (mindist - 1);
+		res += (res * (mindist - 1) + mindist) < b;
+		cout << res << endl;
+	}
 }
 
 int main(int argc, char* argv[]) {
